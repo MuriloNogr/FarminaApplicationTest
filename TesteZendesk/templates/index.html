@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pet Product Finder</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    label { display: block; margin-top: 10px; }
+    select, input { margin-top: 5px; }
+    .product { border: 1px solid #ccc; padding: 10px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Simulador de Produtos Farmina</h1>
+
+  <form id="filterForm">
+    <label>Tipo de alimento:
+      <select name="productType" required>
+        <option value="dry">Seco</option>
+        <option value="wet">Molhado</option>
+      </select>
+    </label>
+
+    <label>Tipo de pet:
+      <select name="type" id="species" required>
+        <option value="dog">Cão</option>
+        <option value="cat">Gato</option>
+      </select>
+    </label>
+
+    <label>Gestação:
+      <select name="gestation">
+        <option value="false">Não</option>
+        <option value="true">Sim</option>
+      </select>
+    </label>
+
+    <label>Lactação:
+      <select name="lactation">
+        <option value="false">Não</option>
+        <option value="true">Sim</option>
+      </select>
+    </label>
+
+    <label>Fase da vida:
+      <select name="lifeStage" required>
+        <option value="puppy">Filhote</option>
+        <option value="adult">Adulto</option>
+        <option value="senior">Sênior</option>
+      </select>
+    </label>
+
+    <label>Cuidados especiais:
+      <select name="specialcares" id="specialCaresSelect" multiple></select>
+    </label>
+
+    <button type="submit">Buscar Produtos</button>
+  </form>
+
+  <div id="results"></div>
+
+  <script>
+    async function loadSpecialCares() {
+      const species = document.getElementById('species').value;
+      const res = await fetch("/specialcares", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ species })
+      });
+      const data = await res.json();
+      const list = data.result[0].specialcares[0].list;
+      const select = document.getElementById("specialCaresSelect");
+      select.innerHTML = "";
+      list.forEach(item => {
+        const opt = document.createElement("option");
+        opt.value = item.specialcare_id;
+        opt.textContent = item.specialcare_name;
+        select.appendChild(opt);
+      });
+    }
+
+    document.getElementById("species").addEventListener("change", loadSpecialCares);
+
+    document.getElementById("filterForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const payload = {
+        productType: form.get("productType"),
+        type: form.get("type"),
+        gestation: form.get("gestation") === "true",
+        lactation: form.get("lactation") === "true",
+        lifeStage: form.get("lifeStage"),
+        specialcares: Array.from(form.getAll("specialcares"))
+      };
+
+      const res = await fetch("/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      const container = document.getElementById("results");
+      container.innerHTML = "";
+
+      if (data.result && data.result.products) {
+        Object.values(data.result.products).forEach(product => {
+          const div = document.createElement("div");
+          div.className = "product";
+          div.innerHTML = `
+            <h3>${product.name}</h3>
+            <img src="${product.img_thumbnail}" alt="${product.name}" width="100" />
+            <p><strong>Linha:</strong> ${product.line}</p>
+            <p><strong>Descrição:</strong> ${product.description}</p>
+            <a href="${product.url}" target="_blank">Ver produto</a>
+          `;
+          container.appendChild(div);
+        });
+      } else {
+        container.textContent = "Nenhum produto encontrado.";
+      }
+    });
+
+    loadSpecialCares();
+  </script>
+</body>
+</html>
