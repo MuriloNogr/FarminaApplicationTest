@@ -3,126 +3,164 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pet Product Finder</title>
+  <title>Farmina Product Selector</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    label { display: block; margin-top: 10px; }
-    select, input { margin-top: 5px; }
-    .product { border: 1px solid #ccc; padding: 10px; margin-top: 10px; }
+    body {
+      background-color: #f9f9f9;
+      font-family: Arial, sans-serif;
+      padding-top: 30px;
+    }
+    .logo {
+      display: block;
+      margin: 0 auto 30px;
+      width: 200px;
+    }
+    .form-section {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    select[multiple] {
+      height: 120px;
+    }
   </style>
 </head>
 <body>
-  <h1>Simulador de Produtos Farmina</h1>
 
-  <form id="filterForm">
-    <label>Tipo de alimento:
-      <select name="productType" required>
-        <option value="dry">Seco</option>
-        <option value="wet">Molhado</option>
-      </select>
-    </label>
+  <img class="logo" src="https://www.farmina.com/images/email-2022/logo-Farmina.png" alt="Farmina Logo" />
 
-    <label>Tipo de pet:
-      <select name="type" id="species" required>
-        <option value="dog">Cão</option>
-        <option value="cat">Gato</option>
-      </select>
-    </label>
+  <div class="form-section">
+    <form id="filter-form">
+      <div class="mb-3">
+        <label class="form-label">Tipo de alimento</label>
+        <select name="productType" class="form-select">
+          <option value="dry">Seco</option>
+          <option value="wet">Molhado</option>
+        </select>
+      </div>
 
-    <label>Gestação:
-      <select name="gestation">
-        <option value="false">Não</option>
-        <option value="true">Sim</option>
-      </select>
-    </label>
+      <div class="mb-3">
+        <label class="form-label">Tipo de pet</label>
+        <select name="type" id="type" class="form-select">
+          <option value="dog">Cão</option>
+          <option value="cat">Gato</option>
+        </select>
+      </div>
 
-    <label>Lactação:
-      <select name="lactation">
-        <option value="false">Não</option>
-        <option value="true">Sim</option>
-      </select>
-    </label>
+      <div class="mb-3">
+        <label class="form-label">Gestação</label>
+        <select name="gestation" class="form-select">
+          <option value="false">Não</option>
+          <option value="true">Sim</option>
+        </select>
+      </div>
 
-    <label>Fase da vida:
-      <select name="lifeStage" required>
-        <option value="puppy">Filhote</option>
-        <option value="adult">Adulto</option>
-        <option value="senior">Sênior</option>
-      </select>
-    </label>
+      <div class="mb-3">
+        <label class="form-label">Lactação</label>
+        <select name="lactation" class="form-select">
+          <option value="false">Não</option>
+          <option value="true">Sim</option>
+        </select>
+      </div>
 
-    <label>Cuidados especiais:
-      <select name="specialcares" id="specialCaresSelect" multiple></select>
-    </label>
+      <div class="mb-3">
+        <label class="form-label">Fase da vida</label>
+        <select name="lifeStage" class="form-select">
+          <option value="puppy">Filhote</option>
+          <option value="adult">Adulto</option>
+          <option value="senior">Sênior</option>
+        </select>
+      </div>
 
-    <button type="submit">Buscar Produtos</button>
-  </form>
+      <div class="mb-3">
+        <label class="form-label">Cuidados especiais</label>
+        <select name="specialcares" id="specialcares" multiple class="form-select"></select>
+      </div>
 
-  <div id="results"></div>
+      <button type="submit" class="btn btn-primary w-100">Buscar Produtos</button>
+    </form>
+
+    <div id="results" class="mt-4"></div>
+  </div>
 
   <script>
     async function loadSpecialCares() {
-      const species = document.getElementById('species').value;
-      const res = await fetch("/specialcares", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ species })
+      const type = document.getElementById('type').value;
+
+      const res = await fetch('/specialcares', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ species: type })
       });
+
       const data = await res.json();
-      const list = data.result[0].specialcares[0].list;
-      const select = document.getElementById("specialCaresSelect");
-      select.innerHTML = "";
-      list.forEach(item => {
-        const opt = document.createElement("option");
-        opt.value = item.specialcare_id;
-        opt.textContent = item.specialcare_name;
+      const select = document.getElementById('specialcares');
+      select.innerHTML = '';
+      data.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.specialcare_id;
+        opt.textContent = c.specialcare_name;
         select.appendChild(opt);
       });
     }
 
-    document.getElementById("species").addEventListener("change", loadSpecialCares);
+    document.getElementById('type').addEventListener('change', loadSpecialCares);
+    document.addEventListener('DOMContentLoaded', loadSpecialCares);
 
-    document.getElementById("filterForm").addEventListener("submit", async (e) => {
+    document.getElementById('filter-form').addEventListener('submit', async e => {
       e.preventDefault();
-      const form = new FormData(e.target);
+
+      const formData = new FormData(e.target);
+      const specialcares = Array.from(document.getElementById('specialcares').selectedOptions).map(opt => opt.value);
+
       const payload = {
-        productType: form.get("productType"),
-        type: form.get("type"),
-        gestation: form.get("gestation") === "true",
-        lactation: form.get("lactation") === "true",
-        lifeStage: form.get("lifeStage"),
-        specialcares: Array.from(form.getAll("specialcares"))
+        productType: formData.get('productType'),
+        type: formData.get('type'),
+        gestation: formData.get('gestation') === 'true',
+        lactation: formData.get('lactation') === 'true',
+        lifeStage: formData.get('lifeStage'),
+        specialcares: specialcares
       };
 
-      const res = await fetch("/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/products', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(payload)
       });
 
       const data = await res.json();
-      const container = document.getElementById("results");
-      container.innerHTML = "";
+      const results = document.getElementById('results');
+      results.innerHTML = '';
 
-      if (data.result && data.result.products) {
+      if (data.result && data.result.products && Object.keys(data.result.products).length > 0) {
         Object.values(data.result.products).forEach(product => {
-          const div = document.createElement("div");
-          div.className = "product";
-          div.innerHTML = `
-            <h3>${product.name}</h3>
-            <img src="${product.img_thumbnail}" alt="${product.name}" width="100" />
-            <p><strong>Linha:</strong> ${product.line}</p>
-            <p><strong>Descrição:</strong> ${product.description}</p>
-            <a href="${product.url}" target="_blank">Ver produto</a>
+          const card = document.createElement('div');
+          card.className = 'card mb-3';
+          card.innerHTML = `
+            <div class="row g-0">
+              <div class="col-md-4 text-center p-2">
+                <img src="${product.img_thumbnail}" class="img-fluid rounded-start" alt="${product.name}">
+              </div>
+              <div class="col-md-8">
+                <div class="card-body">
+                  <h5 class="card-title">${product.name}</h5>
+                  <p class="card-text">${product.description || ''}</p>
+                  <a href="${product.url}" class="btn btn-sm btn-outline-primary" target="_blank">Ver produto</a>
+                </div>
+              </div>
+            </div>
           `;
-          container.appendChild(div);
+          results.appendChild(card);
         });
       } else {
-        container.textContent = "Nenhum produto encontrado.";
+        results.innerHTML = `<div class="alert alert-warning">Nenhum produto encontrado com os filtros selecionados.</div>`;
       }
     });
-
-    loadSpecialCares();
   </script>
+
 </body>
 </html>

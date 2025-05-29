@@ -4,42 +4,63 @@ from requests.auth import HTTPBasicAuth
 
 app = Flask(__name__)
 
-AUTH = HTTPBasicAuth('wsfarmina_zendesk', 'test')
-BASE_URL_PRODUCTS = "https://gw-c.petgenius.info/wfservice/z1/nutritionalplans/products/list"
-BASE_URL_CARES = "https://gw-c.petgenius.info/wfservice/z1/specialcares/list"
+FARMINA_AUTH = HTTPBasicAuth('wsfarmina_zendesk', 'test')
 
-@app.route("/")
+@app.route('/')
 def index():
-    return render_template("index.html")
+    return render_template('index.html')
 
-@app.route("/specialcares", methods=["POST"])
+@app.route('/specialcares', methods=['POST'])
 def get_specialcares():
-    species = request.json.get("species", "dog")
+    data = request.json
     payload = {
-        "species": species,
+        "species": data.get("species", "dog"),
         "country": "MA",
         "languageId": "1",
         "type": "dietetic"
     }
-    res = requests.post(BASE_URL_CARES, json=payload, auth=AUTH)
-    return jsonify(res.json())
 
-@app.route("/products", methods=["POST"])
+    response = requests.post(
+        "https://gw-c.petgenius.info/wfservice/z1/specialcares/list",
+        auth=FARMINA_AUTH,
+        json=payload
+    )
+
+    if response.status_code == 200:
+        try:
+            result = response.json()
+            cares = result["result"][0]["specialcares"][0]["list"]
+            return jsonify(cares)
+        except Exception:
+            return jsonify([]), 200
+    return jsonify([]), 200
+
+@app.route('/products', methods=['POST'])
 def get_products():
-    filters = request.json
+    data = request.json
+
     payload = {
         "country": "MA",
         "languageId": "20",
-        "productType": filters.get("productType"),
-        "type": filters.get("type"),
-        "lifeStage": filters.get("lifeStage"),
-        "gestation": filters.get("gestation") == True,
-        "lactation": filters.get("lactation") == True,
-        "specialcares": filters.get("specialcares", []),
+        "productType": data.get("productType", "dry"),
+        "type": data.get("type"),
+        "lifeStage": data.get("lifeStage"),
+        "gestation": data.get("gestation"),
+        "lactation": data.get("lactation"),
+        "specialcares": data.get("specialcares"),
         "appsAndEshop": True
     }
-    res = requests.post(BASE_URL_PRODUCTS, json=payload, auth=AUTH)
-    return jsonify(res.json())
 
-if __name__ == "__main__":
+    response = requests.post(
+        "https://gw-c.petgenius.info/wfservice/z1/nutritionalplans/products/list",
+        auth=FARMINA_AUTH,
+        json=payload
+    )
+
+    try:
+        return jsonify(response.json())
+    except Exception:
+        return jsonify({"status": 500, "message": "Error parsing response"}), 500
+
+if __name__ == '__main__':
     app.run(debug=True)
