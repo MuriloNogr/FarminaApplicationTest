@@ -36,52 +36,52 @@
   <div class="form-section">
     <form id="filter-form">
       <div class="mb-3">
-        <label class="form-label">Tipo de alimento</label>
+        <label class="form-label">Food Type</label>
         <select name="productType" class="form-select">
-          <option value="dry">Seco</option>
-          <option value="wet">Molhado</option>
+          <option value="dry">Dry</option>
+          <option value="wet">Wet</option>
         </select>
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Tipo de pet</label>
+        <label class="form-label">Pet Type</label>
         <select name="type" id="type" class="form-select">
-          <option value="dog">Cão</option>
-          <option value="cat">Gato</option>
+          <option value="dog">Dog</option>
+          <option value="cat">Cat</option>
         </select>
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Gestação</label>
+        <label class="form-label">Pregnant</label>
         <select name="gestation" class="form-select">
-          <option value="false">Não</option>
-          <option value="true">Sim</option>
+          <option value="false">No</option>
+          <option value="true">Yes</option>
         </select>
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Lactação</label>
+        <label class="form-label">Lactating</label>
         <select name="lactation" class="form-select">
-          <option value="false">Não</option>
-          <option value="true">Sim</option>
+          <option value="false">No</option>
+          <option value="true">Yes</option>
         </select>
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Fase da vida</label>
+        <label class="form-label">Life Stage</label>
         <select name="lifeStage" class="form-select">
-          <option value="puppy">Filhote</option>
-          <option value="adult">Adulto</option>
-          <option value="senior">Sênior</option>
+          <option value="puppy">Puppy</option>
+          <option value="adult">Adult</option>
+          <option value="senior">Senior</option>
         </select>
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Cuidados especiais</label>
+        <label class="form-label">Special Cares</label>
         <select name="specialcares" id="specialcares" multiple class="form-select"></select>
       </div>
 
-      <button type="submit" class="btn btn-primary w-100">Buscar Produtos</button>
+      <button type="submit" class="btn btn-primary w-100">Search Products</button>
     </form>
 
     <div id="results" class="mt-4"></div>
@@ -149,7 +149,7 @@
                 <div class="card-body">
                   <h5 class="card-title">${product.name}</h5>
                   <p class="card-text">${product.description || ''}</p>
-                  <a href="${product.url}" class="btn btn-sm btn-outline-primary" target="_blank">Ver produto</a>
+                  <a href="${product.url}" class="btn btn-sm btn-outline-primary" target="_blank">View Product</a>
                 </div>
               </div>
             </div>
@@ -157,7 +157,7 @@
           results.appendChild(card);
         });
       } else {
-        results.innerHTML = `<div class="alert alert-warning">Nenhum produto encontrado com os filtros selecionados.</div>`;
+        results.innerHTML = `<div class="alert alert-warning">No products found for the selected filters.</div>`;
       }
     });
   </script>
